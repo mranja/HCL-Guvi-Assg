@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: pulsepoll-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - pulsepoll-network
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: pulsepoll-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - pulsepoll-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pulsepoll-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - MONGODB_URI=mongodb://mongodb:27017
+      - MONGODB_DB=pulsepoll
+      - REDIS_URI=redis://redis:6379
+      - JWT_SECRET=pulsepoll-jwt-production-secret-key-999
+      - FRONTEND_URL=http://localhost
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - pulsepoll-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pulsepoll-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - pulsepoll-network
+
+volumes:
+  mongo_data:
+  redis_data:
+
+networks:
+  pulsepoll-network:
+    driver: bridge
