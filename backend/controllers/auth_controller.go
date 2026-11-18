@@ -9,6 +9,7 @@ import (
 	"pulsepoll/config"
 	"pulsepoll/middleware"
 	"pulsepoll/models"
+	"pulsepoll/store"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -38,38 +39,64 @@ func Register(c *gin.Context) {
 	cleanEmail := strings.ToLower(strings.TrimSpace(input.Email))
 	cleanName := strings.TrimSpace(input.Name)
 
-	collection := config.DB.Collection("users")
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	// If MongoDB is connected, use MongoDB
+	if config.DB != nil {
+		collection := config.DB.Collection("users")
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 
-	var existing models.User
-	err := collection.FindOne(ctx, bson.M{"email": cleanEmail}).Decode(&existing)
-	if err == nil {
+		var existing models.User
+		err := collection.FindOne(ctx, bson.M{"email": cleanEmail}).Decode(&existing)
+		if err == nil {
+			c.JSON(http.StatusConflict, gin.H{"error": "An account with this email already exists"})
+			return
+		}
+
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+			return
+		}
+
+		newUser := models.User{
+			ID:        primitive.NewObjectID(),
+			Email:     cleanEmail,
+			Password:  string(hashedPassword),
+			Name:      cleanName,
+			CreatedAt: time.Now(),
+		}
+
+		_, err = collection.InsertOne(ctx, newUser)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+			return
+		}
+
+		token, err := middleware.GenerateToken(newUser.ID, newUser.Email, newUser.Name)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+			return
+		}
+
+		c.JSON(http.StatusCreated, gin.H{
+			"token": token,
+			"user": gin.H{
+				"id":    newUser.ID.Hex(),
+				"email": newUser.Email,
+				"name":  newUser.Name,
+			},
+		})
+		return
+	}
+
+	// Fallback to local persistent store
+	user, err := store.DB.CreateUser(cleanName, cleanEmail, input.Password)
+	if err != nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "An account with this email already exists"})
 		return
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
-		return
-	}
-
-	newUser := models.User{
-		ID:        primitive.NewObjectID(),
-		Email:     cleanEmail,
-		Password:  string(hashedPassword),
-		Name:      cleanName,
-		CreatedAt: time.Now(),
-	}
-
-	_, err = collection.InsertOne(ctx, newUser)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
-		return
-	}
-
-	token, err := middleware.GenerateToken(newUser.ID, newUser.Email, newUser.Name)
+	token, err := middleware.GenerateToken(user.ID, user.Email, user.Name)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
@@ -78,9 +105,9 @@ func Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"token": token,
 		"user": gin.H{
-			"id":    newUser.ID.Hex(),
-			"email": newUser.Email,
-			"name":  newUser.Name,
+			"id":    user.ID.Hex(),
+			"email": user.Email,
+			"name":  user.Name,
 		},
 	})
 }
@@ -94,18 +121,49 @@ func Login(c *gin.Context) {
 
 	cleanEmail := strings.ToLower(strings.TrimSpace(input.Email))
 
-	collection := config.DB.Collection("users")
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	// If MongoDB is connected
+	if config.DB != nil {
+		collection := config.DB.Collection("users")
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 
-	var user models.User
-	err := collection.FindOne(ctx, bson.M{"email": cleanEmail}).Decode(&user)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
+		var user models.User
+		err := collection.FindOne(ctx, bson.M{"email": cleanEmail}).Decode(&user)
+		if err != nil {
+			if err == mongo.ErrNoDocuments {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database lookup failed"})
+			return
+		}
+
+		if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database lookup failed"})
+
+		token, err := middleware.GenerateToken(user.ID, user.Email, user.Name)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate auth token"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"token": token,
+			"user": gin.H{
+				"id":    user.ID.Hex(),
+				"email": user.Email,
+				"name":  user.Name,
+			},
+		})
+		return
+	}
+
+	// Fallback to local persistent store
+	user, err := store.DB.FindUserByEmail(cleanEmail)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}
 

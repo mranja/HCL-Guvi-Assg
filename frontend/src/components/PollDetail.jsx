@@ -8,12 +8,13 @@ import {
   Lock,
   Unlock,
   Users,
-  Clock,
   Sparkles,
-  BarChart,
+  BarChart2,
   PieChart as PieIcon,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  ArrowLeft,
+  Zap
 } from 'lucide-react';
 import {
   BarChart as RechartsBarChart,
@@ -27,15 +28,15 @@ import {
   Pie
 } from 'recharts';
 
-const CHART_COLORS = [
-  '#6366f1', // Indigo
-  '#8b5cf6', // Violet
+const ELEGANT_COLORS = [
+  '#4f46e5', // Indigo
   '#ec4899', // Pink
   '#06b6d4', // Cyan
   '#10b981', // Emerald
   '#f59e0b', // Amber
+  '#8b5cf6', // Purple
   '#3b82f6', // Blue
-  '#14b8a6', // Teal
+  '#ef4444', // Red
 ];
 
 export default function PollDetail({ pollId, currentUser, onBack }) {
@@ -47,10 +48,9 @@ export default function PollDetail({ pollId, currentUser, onBack }) {
   const [voting, setVoting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState('');
-  const [viewMode, setViewMode] = useState('bars'); // 'bars' or 'chart'
+  const [viewMode, setViewMode] = useState('bars');
   const [toggling, setToggling] = useState(false);
 
-  // Check if voter already cast vote for this specific poll in localStorage
   useEffect(() => {
     const savedVote = localStorage.getItem(`voted_${pollId}`);
     if (savedVote) {
@@ -59,7 +59,6 @@ export default function PollDetail({ pollId, currentUser, onBack }) {
     }
   }, [pollId]);
 
-  // Initial Poll Fetch
   useEffect(() => {
     let isMounted = true;
     const fetchPoll = async () => {
@@ -80,7 +79,6 @@ export default function PollDetail({ pollId, currentUser, onBack }) {
     };
   }, [pollId]);
 
-  // Real-time WebSocket Subscription via Go + Redis Pub/Sub
   useEffect(() => {
     if (!pollId) return;
 
@@ -137,15 +135,14 @@ export default function PollDetail({ pollId, currentUser, onBack }) {
       setUserVotedOptionId(selectedOption);
       localStorage.setItem(`voted_${pollId}`, selectedOption);
 
-      // Trigger celebratory micro-confetti
       try {
         confetti({
-          particleCount: 50,
-          spread: 60,
-          origin: { y: 0.8 },
+          particleCount: 60,
+          spread: 70,
+          origin: { y: 0.75 },
         });
       } catch (e) {
-        // ignore
+        // no-op
       }
 
       if (res.options) {
@@ -187,23 +184,25 @@ export default function PollDetail({ pollId, currentUser, onBack }) {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-slate-400 text-sm">Streaming poll from Redis...</p>
+        <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
+          Connecting to Redis Pub/Sub...
+        </p>
       </div>
     );
   }
 
   if (error && !poll) {
     return (
-      <div className="max-w-xl mx-auto my-12 p-8 bg-slate-900 border border-slate-800 rounded-2xl text-center">
-        <AlertCircle className="w-12 h-12 text-rose-400 mx-auto mb-3" />
-        <h3 className="text-lg font-bold text-white mb-2">Poll Not Found</h3>
-        <p className="text-sm text-slate-400 mb-6">{error}</p>
+      <div className="max-w-xl mx-auto my-14 p-10 bg-white border border-slate-200 rounded-3xl text-center shadow-lg">
+        <AlertCircle className="w-12 h-12 text-rose-500 mx-auto mb-3" />
+        <h3 className="text-lg font-bold text-slate-900 mb-2">Poll Not Found</h3>
+        <p className="text-xs text-slate-500 mb-6">{error}</p>
         <button
           onClick={onBack}
-          className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm rounded-xl transition"
+          className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition"
         >
-          Return to All Polls
+          Return to Polls
         </button>
       </div>
     );
@@ -213,29 +212,29 @@ export default function PollDetail({ pollId, currentUser, onBack }) {
   const chartData = (poll?.options || []).map((o) => ({
     name: o.text,
     votes: o.votes,
-    percentage: poll.total_votes > 0 ? ((o.votes / poll.total_votes) * 100).toFixed(1) : 0,
   }));
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 animate-in fade-in duration-300">
-      {/* Top Bar Navigation */}
-      <div className="flex items-center justify-between mb-6">
+      {/* Navigation & Controls */}
+      <div className="flex items-center justify-between mb-8">
         <button
           onClick={onBack}
-          className="text-sm text-slate-400 hover:text-white flex items-center gap-1.5 transition"
+          className="text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-slate-900 flex items-center gap-1.5 transition"
         >
-          ← Back to Polls
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Polls</span>
         </button>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {isCreator && (
             <button
               onClick={handleToggleStatus}
               disabled={toggling}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border transition ${
                 poll.is_active
-                  ? 'border-amber-500/40 text-amber-300 hover:bg-amber-500/10'
-                  : 'border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10'
+                  ? 'border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100'
+                  : 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
               }`}
             >
               {poll.is_active ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
@@ -245,148 +244,146 @@ export default function PollDetail({ pollId, currentUser, onBack }) {
 
           <button
             onClick={handleCopyLink}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/80 rounded-lg text-xs font-medium transition"
+            className="flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold uppercase tracking-wider transition shadow-sm"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
-            <span>{copied ? 'Link Copied!' : 'Share Live Link'}</span>
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5" />}
+            <span>{copied ? 'Link Copied!' : 'Share Link'}</span>
           </button>
         </div>
       </div>
 
-      {/* Poll Header Card */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl mb-6 relative overflow-hidden">
-        {/* Glowing badge */}
-        <div className="flex flex-wrap items-center gap-2.5 mb-4">
+      {/* Main Poll Card */}
+      <div className="bg-white border border-slate-200/90 rounded-[2.5rem] p-8 sm:p-12 shadow-xl shadow-slate-200/40 mb-8 relative overflow-hidden bg-dot-pattern">
+        <div className="flex flex-wrap items-center gap-3 mb-5">
           <div
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${
               poll.is_active
-                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                : 'bg-slate-800 text-slate-400 border border-slate-700'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-slate-100 text-slate-500 border border-slate-200'
             }`}
           >
             <span
               className={`w-2 h-2 rounded-full ${
-                poll.is_active ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'
+                poll.is_active ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
               }`}
             />
-            <span>{poll.is_active ? 'LIVE & ACCEPTING VOTES' : 'CLOSED'}</span>
+            <span>{poll.is_active ? 'LIVE & RECEIVING VOTES' : 'CLOSED'}</span>
           </div>
 
-          <div className="inline-flex items-center gap-1 text-xs text-slate-400 bg-slate-800/60 px-2.5 py-1 rounded-full border border-slate-700/40">
-            <Users className="w-3.5 h-3.5 text-indigo-400" />
-            <span>{poll.total_votes} {poll.total_votes === 1 ? 'vote' : 'votes'} cast</span>
+          <div className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-slate-100/90 px-3 py-1 rounded-full border border-slate-200">
+            <Users className="w-3.5 h-3.5 text-indigo-600" />
+            <span>{poll.total_votes} {poll.total_votes === 1 ? 'vote' : 'votes'} total</span>
           </div>
 
-          <div className="inline-flex items-center gap-1 text-xs text-slate-400 bg-slate-800/60 px-2.5 py-1 rounded-full border border-slate-700/40">
-            <Radio className="w-3.5 h-3.5 text-pink-400" />
-            <span>Redis Realtime Engine</span>
+          <div className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
+            <Zap className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Redis Stream</span>
           </div>
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-2">
+        <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight leading-snug mb-3">
           {poll.title}
         </h1>
 
         {poll.description && (
-          <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-4 max-w-2xl">
+          <p className="text-slate-500 text-sm sm:text-base leading-relaxed mb-6 max-w-2xl">
             {poll.description}
           </p>
         )}
 
-        <div className="flex items-center gap-4 text-xs text-slate-500 pt-3 border-t border-slate-800/60">
-          <span>Created by: <span className="text-slate-300 font-medium">{poll.creator_name || 'Anonymous'}</span></span>
+        <div className="flex items-center gap-3 text-xs text-slate-400 pt-4 border-t border-slate-100 font-medium">
+          <span>Host: <strong className="text-slate-700 font-bold">{poll.creator_name || 'Anonymous'}</strong></span>
           <span>•</span>
-          <span>Updated in real-time</span>
+          <span>Zero-latency WebSocket broadcast</span>
         </div>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center gap-3 text-rose-400 text-sm">
-          <AlertCircle className="w-5 h-5 shrink-0" />
+        <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-center gap-3 text-rose-700 text-xs font-semibold">
+          <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
-      {/* Main Interactive Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Interactive Vote or Live Vote Bars */}
-        <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xl">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-indigo-400" />
-              <span>{hasVoted ? 'Live Results' : 'Cast Your Vote'}</span>
+      {/* Two Column Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Voting or Live Results */}
+        <div className="lg:col-span-7 bg-white border border-slate-200/90 rounded-[2rem] p-7 sm:p-8 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-base font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-indigo-600" />
+              <span>{hasVoted ? 'Real-time Live Results' : 'Choose an Option'}</span>
             </h2>
-            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
+
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
               <button
                 onClick={() => setViewMode('bars')}
-                className={`p-1.5 rounded text-xs transition ${
-                  viewMode === 'bars' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
+                className={`p-1.5 rounded-lg text-xs transition ${
+                  viewMode === 'bars' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-400 hover:text-slate-700'
                 }`}
                 title="Progress Bars"
               >
-                <BarChart className="w-4 h-4" />
+                <BarChart2 className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode('chart')}
-                className={`p-1.5 rounded text-xs transition ${
-                  viewMode === 'chart' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
+                className={`p-1.5 rounded-lg text-xs transition ${
+                  viewMode === 'chart' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-400 hover:text-slate-700'
                 }`}
-                title="Visual Chart"
+                title="Chart Analytics"
               >
                 <PieIcon className="w-4 h-4" />
               </button>
             </div>
           </div>
 
-          {/* Voting Options */}
           {!hasVoted && poll.is_active ? (
             <div className="space-y-3">
               {poll.options.map((opt) => (
-                <label
+                <div
                   key={opt.id}
                   onClick={() => setSelectedOption(opt.id)}
-                  className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all ${
+                  className={`flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all ${
                     selectedOption === opt.id
-                      ? 'border-indigo-500 bg-indigo-500/10 ring-1 ring-indigo-500 shadow-md'
-                      : 'border-slate-800 bg-slate-950/60 hover:border-slate-700 hover:bg-slate-800/40'
+                      ? 'border-indigo-600 bg-indigo-50/50 shadow-md shadow-indigo-100'
+                      : 'border-slate-100 bg-slate-50/50 hover:border-slate-300 hover:bg-slate-50'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-5 h-5 rounded-full border flex items-center justify-center transition ${
+                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition ${
                         selectedOption === opt.id
-                          ? 'border-indigo-500 bg-indigo-600'
-                          : 'border-slate-700 bg-slate-900'
+                          ? 'border-indigo-600 bg-indigo-600'
+                          : 'border-slate-300 bg-white'
                       }`}
                     >
                       {selectedOption === opt.id && (
-                        <div className="w-2 h-2 rounded-full bg-white" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
                       )}
                     </div>
-                    <span className="text-sm sm:text-base font-medium text-slate-200">
+                    <span className="text-sm font-bold text-slate-800">
                       {opt.text}
                     </span>
                   </div>
-                </label>
+                </div>
               ))}
 
               <button
                 onClick={handleVote}
                 disabled={!selectedOption || voting}
-                className="w-full mt-4 py-3.5 px-6 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-[0.99] text-white font-semibold rounded-2xl shadow-lg shadow-indigo-600/30 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full mt-5 py-4 px-6 bg-slate-900 hover:bg-slate-800 active:scale-[0.99] text-white font-bold text-xs uppercase tracking-wider rounded-2xl shadow-xl shadow-slate-900/10 transition flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {voting ? (
                   <span className="inline-block w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                 ) : (
                   <>
                     <span>Submit Live Vote</span>
-                    <CheckCircle2 className="w-5 h-5" />
+                    <CheckCircle2 className="w-4 h-4 text-indigo-400" />
                   </>
                 )}
               </button>
             </div>
           ) : (
-            /* Live Dynamic Progress List */
             <div className="space-y-4">
               {poll.options.map((opt, idx) => {
                 const percentage =
@@ -394,40 +391,39 @@ export default function PollDetail({ pollId, currentUser, onBack }) {
                     ? Math.round((opt.votes / poll.total_votes) * 100)
                     : 0;
                 const isSelectedByUser = userVotedOptionId === opt.id;
-                const color = CHART_COLORS[idx % CHART_COLORS.length];
+                const color = ELEGANT_COLORS[idx % ELEGANT_COLORS.length];
 
                 return (
                   <div
                     key={opt.id}
                     className={`p-4 rounded-2xl border transition-all ${
                       isSelectedByUser
-                        ? 'border-indigo-500/60 bg-indigo-950/20'
-                        : 'border-slate-800/90 bg-slate-950/40'
+                        ? 'border-indigo-300 bg-indigo-50/40 shadow-sm'
+                        : 'border-slate-100 bg-slate-50/60'
                     }`}
                   >
                     <div className="flex justify-between items-center mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-white">
+                        <span className="text-sm font-bold text-slate-800">
                           {opt.text}
                         </span>
                         {isSelectedByUser && (
-                          <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                            Your Vote
+                          <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-indigo-600 text-white">
+                            Your Choice
                           </span>
                         )}
                       </div>
                       <div className="text-right">
-                        <span className="text-sm font-bold text-white">
+                        <span className="text-sm font-black text-slate-900">
                           {percentage}%
                         </span>
-                        <span className="text-xs text-slate-500 ml-1.5">
+                        <span className="text-xs text-slate-400 font-semibold ml-1.5">
                           ({opt.votes})
                         </span>
                       </div>
                     </div>
 
-                    {/* Progress track */}
-                    <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden p-0.5">
+                    <div className="w-full bg-slate-200/70 rounded-full h-3 overflow-hidden p-0.5">
                       <div
                         className="h-full rounded-full transition-all duration-700 ease-out"
                         style={{
@@ -440,34 +436,34 @@ export default function PollDetail({ pollId, currentUser, onBack }) {
                 );
               })}
 
-              <div className="pt-2 flex items-center justify-between text-xs text-slate-400">
-                <span className="flex items-center gap-1.5 text-emerald-400">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  Redis WebSocket Stream Connected
+              <div className="pt-3 flex items-center justify-between text-xs text-slate-400 font-semibold">
+                <span className="flex items-center gap-1.5 text-emerald-600">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                  WebSocket Stream Live
                 </span>
-                <span>Updates dynamically as votes arrive</span>
+                <span>Instant Redis Sync</span>
               </div>
             </div>
           )}
         </div>
 
-        {/* Right Column: Interactive Charts & Metrics */}
-        <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xl flex flex-col justify-between">
+        {/* Analytics Card */}
+        <div className="lg:col-span-5 bg-white border border-slate-200/90 rounded-[2rem] p-7 sm:p-8 shadow-sm flex flex-col justify-between">
           <div>
-            <h3 className="text-base font-bold text-white mb-1">
-              Visual Analytics
+            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 mb-1">
+              Live Breakdown
             </h3>
-            <p className="text-xs text-slate-400 mb-4">
-              Real-time distribution of audience responses
+            <p className="text-xs text-slate-400 mb-6 font-medium">
+              Real-time response distribution
             </p>
 
             {poll.total_votes === 0 ? (
-              <div className="py-16 text-center text-slate-500">
-                <BarChart className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                <p className="text-sm">Awaiting first live vote...</p>
+              <div className="py-16 text-center text-slate-400">
+                <BarChart2 className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                <p className="text-xs font-semibold uppercase tracking-wider">Awaiting audience votes...</p>
               </div>
             ) : viewMode === 'chart' ? (
-              <div className="h-64 w-full">
+              <div className="h-60 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -476,31 +472,31 @@ export default function PollDetail({ pollId, currentUser, onBack }) {
                       nameKey="name"
                       cx="50%"
                       cy="50%"
-                      outerRadius={80}
-                      innerRadius={45}
-                      paddingAngle={4}
+                      outerRadius={75}
+                      innerRadius={40}
+                      paddingAngle={3}
                     >
-                      {chartData.map((entry, index) => (
+                      {chartData.map((_, index) => (
                         <Cell
                           key={`cell-${index}`}
-                          fill={CHART_COLORS[index % CHART_COLORS.length]}
+                          fill={ELEGANT_COLORS[index % ELEGANT_COLORS.length]}
                         />
                       ))}
                     </Pie>
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#0f172a',
-                        borderColor: '#334155',
+                        backgroundColor: '#ffffff',
+                        borderColor: '#e2e8f0',
                         borderRadius: '0.75rem',
                         fontSize: '12px',
-                        color: '#f8fafc',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                       }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="h-64 w-full">
+              <div className="h-60 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <RechartsBarChart
                     data={chartData}
@@ -512,22 +508,22 @@ export default function PollDetail({ pollId, currentUser, onBack }) {
                       dataKey="name"
                       type="category"
                       width={80}
-                      tick={{ fill: '#94a3b8', fontSize: 11 }}
+                      tick={{ fill: '#64748b', fontSize: 11, fontWeight: 600 }}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#0f172a',
-                        borderColor: '#334155',
+                        backgroundColor: '#ffffff',
+                        borderColor: '#e2e8f0',
                         borderRadius: '0.75rem',
                         fontSize: '12px',
-                        color: '#f8fafc',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                       }}
                     />
                     <Bar dataKey="votes" radius={[0, 6, 6, 0]}>
-                      {chartData.map((entry, index) => (
+                      {chartData.map((_, index) => (
                         <Cell
                           key={`bar-${index}`}
-                          fill={CHART_COLORS[index % CHART_COLORS.length]}
+                          fill={ELEGANT_COLORS[index % ELEGANT_COLORS.length]}
                         />
                       ))}
                     </Bar>
@@ -537,19 +533,18 @@ export default function PollDetail({ pollId, currentUser, onBack }) {
             )}
           </div>
 
-          {/* Architecture callout footer */}
-          <div className="mt-6 pt-4 border-t border-slate-800 text-xs text-slate-500 space-y-1.5">
+          <div className="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-500 space-y-1.5 font-medium">
             <div className="flex justify-between">
-              <span>Sync Engine:</span>
-              <span className="text-slate-300 font-mono">Redis Pub/Sub + Hashes</span>
+              <span>Streaming Engine:</span>
+              <span className="text-slate-800 font-mono font-bold">Redis Pub/Sub</span>
             </div>
             <div className="flex justify-between">
-              <span>Persistence:</span>
-              <span className="text-slate-300 font-mono">MongoDB Replica/Cluster</span>
+              <span>Database Layer:</span>
+              <span className="text-slate-800 font-mono font-bold">MongoDB Cluster</span>
             </div>
             <div className="flex justify-between">
-              <span>Double-vote defense:</span>
-              <span className="text-emerald-400 font-mono">Redis SAdd Atomic Set</span>
+              <span>Concurrency Check:</span>
+              <span className="text-emerald-700 font-mono font-bold">Atomic Redis SAdd</span>
             </div>
           </div>
         </div>

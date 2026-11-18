@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { apiRequest, setAuthToken, setStoredUser } from '../services/api';
-import { Lock, Mail, User, AlertCircle, ArrowRight } from 'lucide-react';
+import { Lock, Mail, User, AlertCircle, ArrowRight, X, Sparkles } from 'lucide-react';
 
 export default function AuthModal({ onAuthSuccess, onCancel }) {
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(false); // default to create account
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,31 +35,34 @@ export default function AuthModal({ onAuthSuccess, onCancel }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 sm:p-8 shadow-2xl shadow-indigo-950/50">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-white tracking-tight">
-              {isLogin ? 'Welcome Back' : 'Create an Account'}
-            </h2>
-            <p className="text-sm text-slate-400 mt-1">
-              {isLogin
-                ? 'Sign in to create, manage, and inspect your live polls'
-                : 'Join PulsePoll to host interactive audience surveys'}
-            </p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md p-8 sm:p-10 shadow-2xl shadow-slate-900/10 relative">
+        {onCancel && (
+          <button
+            onClick={onCancel}
+            className="absolute top-6 right-6 text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-100 transition"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
+
+        <div className="mb-8">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold mb-3 border border-indigo-100">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Interactive Live Engine</span>
           </div>
-          {onCancel && (
-            <button
-              onClick={onCancel}
-              className="text-slate-500 hover:text-slate-300 transition text-sm p-1"
-            >
-              ✕
-            </button>
-          )}
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            {isLogin ? 'Welcome back' : 'Create an Account'}
+          </h2>
+          <p className="text-sm text-slate-500 mt-1.5">
+            {isLogin
+              ? 'Sign in to access your polls and view live responses.'
+              : 'Join PulsePoll to host real-time polls with zero lag.'}
+          </p>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center gap-2.5 text-rose-400 text-sm">
+          <div className="mb-6 p-3.5 bg-rose-50 border border-rose-200 rounded-2xl flex items-center gap-2.5 text-rose-700 text-xs font-medium">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -68,46 +71,46 @@ export default function AuthModal({ onAuthSuccess, onCancel }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
             <div>
-              <label className="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                 Full Name
               </label>
               <div className="relative">
-                <User className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <User className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Alex Hunter"
+                  placeholder="e.g. Ranjan"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm transition"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 text-sm transition"
                 />
               </div>
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
               Email Address
             </label>
             <div className="relative">
-              <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+              <Mail className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="email"
                 required
-                placeholder="alex@company.com"
+                placeholder="ranjan@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm transition"
+                className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 text-sm transition"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
               Password
             </label>
             <div className="relative">
-              <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+              <Lock className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="password"
                 required
@@ -115,7 +118,7 @@ export default function AuthModal({ onAuthSuccess, onCancel }) {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm transition"
+                className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 text-sm transition"
               />
             </div>
           </div>
@@ -123,7 +126,7 @@ export default function AuthModal({ onAuthSuccess, onCancel }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 py-3 px-4 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.99] text-white font-medium rounded-xl shadow-lg shadow-indigo-600/30 transition flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full mt-4 py-3.5 px-6 bg-slate-900 hover:bg-slate-800 active:scale-[0.99] text-white font-semibold rounded-2xl shadow-lg shadow-slate-900/20 transition flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loading ? (
               <span className="inline-block w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -136,15 +139,15 @@ export default function AuthModal({ onAuthSuccess, onCancel }) {
           </button>
         </form>
 
-        <div className="mt-6 pt-5 border-t border-slate-800/80 text-center">
-          <p className="text-sm text-slate-400">
+        <div className="mt-8 pt-6 border-t border-slate-100 text-center">
+          <p className="text-xs text-slate-500 font-medium">
             {isLogin ? "Don't have an account yet?" : 'Already have an account?'}{' '}
             <button
               onClick={() => {
                 setIsLogin(!isLogin);
                 setError('');
               }}
-              className="text-indigo-400 hover:text-indigo-300 font-semibold underline underline-offset-4 ml-1"
+              className="text-indigo-600 hover:text-indigo-700 font-bold ml-1 hover:underline"
             >
               {isLogin ? 'Sign up here' : 'Sign in here'}
             </button>
