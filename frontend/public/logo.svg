@@ -1,33 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <!-- Gradient Definition -->
   <defs>
-    <linearGradient id="ppGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#4f46e5" />
-      <stop offset="100%" stop-color="#7c3aed" />
+    <linearGradient id="liveGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="50%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#8b5cf6" />
     </linearGradient>
-    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6366f1" />
-      <stop offset="100%" stop-color="#a855f7" />
-    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
 
-  <!-- Background Squircle -->
-  <rect width="64" height="64" rx="18" fill="#0f172a" />
-  
-  <!-- Subtle inner border -->
-  <rect x="1" y="1" width="62" height="62" rx="17" stroke="rgba(255,255,255,0.08)" stroke-width="2" />
+  <!-- Deep dark backdrop -->
+  <rect width="64" height="64" rx="16" fill="#111827" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" />
 
-  <!-- Animated-style Realtime Pulse Waveform & Bar Chart Graphic -->
-  <!-- Bar 1 -->
-  <rect x="15" y="32" width="6" height="18" rx="3" fill="#94a3b8" opacity="0.6" />
-  
-  <!-- Bar 2 (tallest, primary) -->
-  <rect x="25" y="18" width="6" height="32" rx="3" fill="url(#ppGrad)" />
-  
-  <!-- Bar 3 -->
-  <rect x="35" y="24" width="6" height="26" rx="3" fill="url(#glowGrad)" />
+  <!-- Animated-feel Soundwave / Histogram bars with Neon Styling -->
+  <rect x="14" y="34" width="6" height="16" rx="3" fill="#06b6d4" opacity="0.8" />
+  <rect x="24" y="20" width="6" height="30" rx="3" fill="url(#liveGradient)" filter="url(#glow)" />
+  <rect x="34" y="14" width="6" height="36" rx="3" fill="#8b5cf6" />
+  <rect x="44" y="28" width="6" height="22" rx="3" fill="#ec4899" opacity="0.85" />
 
-  <!-- Live Pulse Dot & Ring -->
-  <circle cx="49" cy="20" r="4.5" fill="#10b981" />
-  <circle cx="49" cy="20" r="7.5" stroke="#10b981" stroke-width="1.5" opacity="0.4" />
+  <!-- Top-right Pulse Beacon -->
+  <circle cx="50" cy="14" r="3.5" fill="#10b981" />
+  <circle cx="50" cy="14" r="6" stroke="#10b981" stroke-width="1.5" opacity="0.4" />
 </svg>

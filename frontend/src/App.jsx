@@ -10,7 +10,6 @@ import { getStoredUser, removeAuthToken, apiRequest } from './services/api';
 
 export default function App() {
   const [user, setUser] = useState(getStoredUser());
-  // If user is logged in, start directly on dashboard; if guest, start on landing page
   const [currentPage, setCurrentPage] = useState(getStoredUser() ? 'dashboard' : 'landing');
   const [activePollId, setActivePollId] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -21,7 +20,6 @@ export default function App() {
       try {
         const me = await apiRequest('/api/auth/me');
         setUser(me);
-        // Ensure logged-in user is routed away from landing page
         setCurrentPage((prev) => (prev === 'landing' ? 'dashboard' : prev));
       } catch (err) {
         setUser(null);
@@ -43,7 +41,6 @@ export default function App() {
   }, []);
 
   const handleNavigate = (page) => {
-    // If user is authenticated, disallow returning to guest landing page
     if (user && page === 'landing') {
       page = 'dashboard';
     }
@@ -75,6 +72,10 @@ export default function App() {
     setCurrentPage('detail');
   };
 
+  const handleJoinByCode = (code) => {
+    handleSelectPoll(code);
+  };
+
   const handleLogout = () => {
     removeAuthToken();
     setUser(null);
@@ -84,26 +85,26 @@ export default function App() {
   const handleAuthSuccess = (u) => {
     setUser(u);
     setShowAuthModal(false);
-    // When user logs in, immediately switch to dashboard and disable landing page
     setCurrentPage('dashboard');
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fbfbfd] text-slate-900 font-sans selection:bg-indigo-600 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#0b0f19] text-white font-sans selection:bg-cyan-500 selection:text-black">
       <Navbar
         user={user}
         currentPage={currentPage}
         onNavigate={handleNavigate}
         onLogout={handleLogout}
+        onJoinCode={handleJoinByCode}
       />
 
       <main className="flex-1">
-        {/* Landing page only accessible when guest/not logged in */}
         {!user && currentPage === 'landing' && (
           <LandingPage
             user={user}
             onExplore={() => handleNavigate('dashboard')}
             onCreate={() => handleNavigate('create')}
+            onJoinCode={handleJoinByCode}
           />
         )}
 
@@ -149,36 +150,36 @@ export default function App() {
         />
       )}
 
-      {/* Elegant, Minimal Footer */}
-      <footer className="border-t border-slate-200/80 bg-white py-12 text-xs text-slate-500 mt-20">
+      {/* Modern Cyber Footer */}
+      <footer className="border-t border-white/5 bg-[#080c14] py-12 text-xs text-slate-500 mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <img src="/logo.svg" alt="PulsePoll" className="w-7 h-7 rounded-lg" />
-            <span className="font-mono font-bold tracking-tight text-slate-900 uppercase">
-              Pulse<span className="text-indigo-600">Poll</span>
+            <img src="/logo.svg" alt="PulsePoll" className="w-7 h-7 rounded-xl" />
+            <span className="font-mono font-bold tracking-tight text-white uppercase">
+              PULSE<span className="text-cyan-400">POLL</span>
             </span>
-            <span className="text-slate-300">•</span>
-            <span>Real-time audience interaction and live polling</span>
+            <span className="text-slate-700">•</span>
+            <span className="text-slate-400">Next-gen live audience polling &amp; telemetry</span>
           </div>
 
-          <div className="flex items-center gap-6 font-semibold text-slate-600">
+          <div className="flex items-center gap-6 font-semibold text-slate-400">
             {!user && (
               <button
                 onClick={() => handleNavigate('landing')}
-                className="hover:text-slate-900 transition"
+                className="hover:text-white transition"
               >
                 Overview
               </button>
             )}
             <button
               onClick={() => handleNavigate('how-it-works')}
-              className="hover:text-slate-900 transition"
+              className="hover:text-white transition"
             >
               How It Works
             </button>
             <button
               onClick={() => handleNavigate('dashboard')}
-              className="hover:text-slate-900 transition"
+              className="hover:text-white transition"
             >
               Live Polls
             </button>
