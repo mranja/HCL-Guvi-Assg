@@ -10,6 +10,7 @@ import { getStoredUser, removeAuthToken, apiRequest } from './services/api';
 
 export default function App() {
   const [user, setUser] = useState(getStoredUser());
+  // If user is authenticated, default to dashboard. If not logged in, enforce landing page only.
   const [currentPage, setCurrentPage] = useState(getStoredUser() ? 'dashboard' : 'landing');
   const [activePollId, setActivePollId] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -24,13 +25,19 @@ export default function App() {
       } catch (err) {
         setUser(null);
         removeAuthToken();
+        setCurrentPage('landing');
       }
     };
     if (localStorage.getItem('pulsepoll_token')) {
       checkAuth();
+    } else {
+      // Without login, strictly enforce landing page
+      setCurrentPage('landing');
+      setActivePollId(null);
     }
   }, []);
 
+  // Check URL parameters: if direct ?poll=link is opened, allow audience voting if desired, or require login
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const pollParam = params.get('poll');
@@ -41,50 +48,63 @@ export default function App() {
   }, []);
 
   const handleNavigate = (page) => {
-    if (user && page === 'landing') {
+    // STRICT AUTH GATE: Unauthenticated users CANNOT visit any page other than landing (or detail if responding via direct link)
+    if (!user) {
+      if (page === 'auth') {
+        setShowAuthModal(true);
+        return;
+      }
+      // Any attempt to navigate to dashboard, create, or internal pages triggers the login modal
+      setShowAuthModal(true);
+      return;
+    }
+
+    // Authenticated users
+    if (page === 'landing') {
       page = 'dashboard';
     }
 
-    if (page === 'landing') {
+    if (page === 'dashboard') {
       setActivePollId(null);
       window.history.pushState({}, '', window.location.pathname);
-      setCurrentPage('landing');
-    } else if (page === 'dashboard') {
-      setActivePollId(null);
       setCurrentPage('dashboard');
     } else if (page === 'how-it-works') {
       setActivePollId(null);
       setCurrentPage('how-it-works');
     } else if (page === 'create') {
-      if (!user) {
-        setShowAuthModal(true);
-      } else {
-        setShowCreateModal(true);
-      }
-    } else if (page === 'auth') {
-      setShowAuthModal(true);
+      setShowCreateModal(true);
     }
   };
 
   const handleSelectPoll = (pollId) => {
+    // If not logged in and not responding via a direct poll share, prompt login
+    if (!user && !pollId) {
+      setShowAuthModal(true);
+      return;
+    }
     setActivePollId(pollId);
     window.history.pushState({}, '', `?poll=${pollId}`);
     setCurrentPage('detail');
   };
 
   const handleJoinByCode = (code) => {
-    handleSelectPoll(code);
+    if (code) {
+      handleSelectPoll(code);
+    }
   };
 
   const handleLogout = () => {
     removeAuthToken();
     setUser(null);
+    setActivePollId(null);
+    window.history.pushState({}, '', window.location.pathname);
     setCurrentPage('landing');
   };
 
   const handleAuthSuccess = (u) => {
     setUser(u);
     setShowAuthModal(false);
+    // Upon login, transition directly from landing to dashboard
     setCurrentPage('dashboard');
   };
 
@@ -99,23 +119,18 @@ export default function App() {
       />
 
       <main className="flex-1">
-        {!user && currentPage === 'landing' && (
+        {/* Strictly show LandingPage when user is not logged in */}
+        {!user && currentPage !== 'detail' && (
           <LandingPage
             user={user}
-            onExplore={() => handleNavigate('dashboard')}
-            onCreate={() => handleNavigate('create')}
+            onExplore={() => setShowAuthModal(true)}
+            onCreate={() => setShowAuthModal(true)}
             onJoinCode={handleJoinByCode}
           />
         )}
 
-        {currentPage === 'how-it-works' && (
-          <HowItWorks
-            onGetStarted={() => handleNavigate('dashboard')}
-            onCreatePoll={() => handleNavigate('create')}
-          />
-        )}
-
-        {currentPage === 'dashboard' && (
+        {/* Protected Dashboard Page (Only visible when user is logged in) */}
+        {user && currentPage === 'dashboard' && (
           <PollList
             user={user}
             onSelectPoll={handleSelectPoll}
@@ -123,11 +138,20 @@ export default function App() {
           />
         )}
 
+        {/* Protected How It Works Page (Only visible when user is logged in) */}
+        {user && currentPage === 'how-it-works' && (
+          <HowItWorks
+            onGetStarted={() => handleNavigate('dashboard')}
+            onCreatePoll={() => handleNavigate('create')}
+          />
+        )}
+
+        {/* Poll Detail View */}
         {currentPage === 'detail' && activePollId && (
           <PollDetail
             pollId={activePollId}
             currentUser={user}
-            onBack={() => handleNavigate('dashboard')}
+            onBack={() => handleNavigate(user ? 'dashboard' : 'landing')}
           />
         )}
       </main>
@@ -159,30 +183,33 @@ export default function App() {
               Pulse<span className="text-[#c84b31]">Poll</span>
             </span>
             <span className="text-stone-300">•</span>
-            <span className="text-stone-500">Free live polling, Q&amp;A, and interactive audience sessions</span>
+            <span className="text-stone-500">Live audience polling &amp; consensus engine</span>
           </div>
 
           <div className="flex items-center gap-6 font-semibold text-stone-600">
-            {!user && (
+            {user ? (
+              <>
+                <button
+                  onClick={() => handleNavigate('dashboard')}
+                  className="hover:text-stone-900 transition"
+                >
+                  Polls Dashboard
+                </button>
+                <button
+                  onClick={() => handleNavigate('how-it-works')}
+                  className="hover:text-stone-900 transition"
+                >
+                  How it works
+                </button>
+              </>
+            ) : (
               <button
-                onClick={() => handleNavigate('landing')}
-                className="hover:text-stone-900 transition"
+                onClick={() => setShowAuthModal(true)}
+                className="text-[#c84b31] font-bold hover:underline"
               >
-                Overview
+                Sign In to Host
               </button>
             )}
-            <button
-              onClick={() => handleNavigate('how-it-works')}
-              className="hover:text-stone-900 transition"
-            >
-              How it works
-            </button>
-            <button
-              onClick={() => handleNavigate('dashboard')}
-              className="hover:text-stone-900 transition"
-            >
-              Polls Dashboard
-            </button>
           </div>
         </div>
       </footer>

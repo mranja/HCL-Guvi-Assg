@@ -38,7 +38,7 @@ export default function Navbar({ user, onNavigate, onLogout, currentPage, onJoin
           </div>
         </div>
 
-        {/* Center Quick Join PIN (livepoll.io feature) */}
+        {/* Center Quick Join PIN (Audience direct join) */}
         <form onSubmit={handleJoinSubmit} className="hidden lg:flex items-center gap-2">
           <div className="relative">
             <Hash className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
@@ -58,37 +58,32 @@ export default function Navbar({ user, onNavigate, onLogout, currentPage, onJoin
           </button>
         </form>
 
-        {/* Center Navigation Links (Hidden when logged in) */}
-        <nav className="hidden md:flex items-center gap-8 text-xs font-semibold text-stone-600">
-          {!user && (
+        {/* Center Navigation Links: ONLY visible when authenticated */}
+        {user ? (
+          <nav className="hidden md:flex items-center gap-8 text-xs font-semibold text-stone-600">
             <button
-              onClick={() => onNavigate('landing')}
+              onClick={() => onNavigate('dashboard')}
               className={`transition hover:text-[#1c1917] ${
-                currentPage === 'landing' ? 'text-[#c84b31] font-bold' : ''
+                currentPage === 'dashboard' ? 'text-[#c84b31] font-bold' : ''
               }`}
             >
-              Overview
+              Polls Dashboard
             </button>
-          )}
-
-          <button
-            onClick={() => onNavigate('dashboard')}
-            className={`transition hover:text-[#1c1917] ${
-              currentPage === 'dashboard' ? 'text-[#c84b31] font-bold' : ''
-            }`}
-          >
-            Polls Dashboard
-          </button>
-          
-          <button
-            onClick={() => onNavigate('how-it-works')}
-            className={`transition hover:text-[#1c1917] ${
-              currentPage === 'how-it-works' ? 'text-[#c84b31] font-bold' : ''
-            }`}
-          >
-            How it works
-          </button>
-        </nav>
+            
+            <button
+              onClick={() => onNavigate('how-it-works')}
+              className={`transition hover:text-[#1c1917] ${
+                currentPage === 'how-it-works' ? 'text-[#c84b31] font-bold' : ''
+              }`}
+            >
+              How it works
+            </button>
+          </nav>
+        ) : (
+          <div className="hidden md:flex items-center gap-4 text-xs text-stone-500 font-editorial italic">
+            <span>Free live audience polling</span>
+          </div>
+        )}
 
         {/* Right CTA / User State */}
         <div className="flex items-center gap-3">
