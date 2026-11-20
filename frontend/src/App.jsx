@@ -10,7 +10,8 @@ import { getStoredUser, removeAuthToken, apiRequest } from './services/api';
 
 export default function App() {
   const [user, setUser] = useState(getStoredUser());
-  const [currentPage, setCurrentPage] = useState('landing'); // 'landing', 'how-it-works', 'dashboard', 'detail'
+  // If user is logged in, start directly on dashboard; if guest, start on landing page
+  const [currentPage, setCurrentPage] = useState(getStoredUser() ? 'dashboard' : 'landing');
   const [activePollId, setActivePollId] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -20,6 +21,8 @@ export default function App() {
       try {
         const me = await apiRequest('/api/auth/me');
         setUser(me);
+        // Ensure logged-in user is routed away from landing page
+        setCurrentPage((prev) => (prev === 'landing' ? 'dashboard' : prev));
       } catch (err) {
         setUser(null);
         removeAuthToken();
@@ -40,6 +43,11 @@ export default function App() {
   }, []);
 
   const handleNavigate = (page) => {
+    // If user is authenticated, disallow returning to guest landing page
+    if (user && page === 'landing') {
+      page = 'dashboard';
+    }
+
     if (page === 'landing') {
       setActivePollId(null);
       window.history.pushState({}, '', window.location.pathname);
@@ -70,6 +78,14 @@ export default function App() {
   const handleLogout = () => {
     removeAuthToken();
     setUser(null);
+    setCurrentPage('landing');
+  };
+
+  const handleAuthSuccess = (u) => {
+    setUser(u);
+    setShowAuthModal(false);
+    // When user logs in, immediately switch to dashboard and disable landing page
+    setCurrentPage('dashboard');
   };
 
   return (
@@ -82,7 +98,8 @@ export default function App() {
       />
 
       <main className="flex-1">
-        {currentPage === 'landing' && (
+        {/* Landing page only accessible when guest/not logged in */}
+        {!user && currentPage === 'landing' && (
           <LandingPage
             user={user}
             onExplore={() => handleNavigate('dashboard')}
@@ -117,10 +134,7 @@ export default function App() {
       {/* Modals */}
       {showAuthModal && (
         <AuthModal
-          onAuthSuccess={(u) => {
-            setUser(u);
-            setShowAuthModal(false);
-          }}
+          onAuthSuccess={handleAuthSuccess}
           onCancel={() => setShowAuthModal(false)}
         />
       )}
@@ -135,7 +149,7 @@ export default function App() {
         />
       )}
 
-      {/* Clean, Elegant Footer without tech clutter */}
+      {/* Elegant, Minimal Footer */}
       <footer className="border-t border-slate-200/80 bg-white py-12 text-xs text-slate-500 mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
@@ -148,12 +162,14 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-6 font-semibold text-slate-600">
-            <button
-              onClick={() => handleNavigate('landing')}
-              className="hover:text-slate-900 transition"
-            >
-              Overview
-            </button>
+            {!user && (
+              <button
+                onClick={() => handleNavigate('landing')}
+                className="hover:text-slate-900 transition"
+              >
+                Overview
+              </button>
+            )}
             <button
               onClick={() => handleNavigate('how-it-works')}
               className="hover:text-slate-900 transition"

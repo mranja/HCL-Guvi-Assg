@@ -1,13 +1,13 @@
 import React from 'react';
-import { Plus, LogOut, ArrowRight } from 'lucide-react';
+import { Plus, LogOut, ArrowRight, BarChart2 } from 'lucide-react';
 
 export default function Navbar({ user, onNavigate, onLogout, currentPage }) {
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-100 transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        {/* Brand with Custom Logo */}
+        {/* Brand with Logo */}
         <div 
-          onClick={() => onNavigate('landing')} 
+          onClick={() => onNavigate(user ? 'dashboard' : 'landing')} 
           className="flex items-center gap-3 cursor-pointer group"
         >
           <img 
@@ -22,20 +22,31 @@ export default function Navbar({ user, onNavigate, onLogout, currentPage }) {
               </span>
             </div>
             <p className="text-[10px] uppercase font-bold tracking-widest text-slate-400">
-              Audience Polling Engine
+              Live Polling Engine
             </p>
           </div>
         </div>
 
-        {/* Center Navigation Links (Clean, No Tech-Stack Labels) */}
+        {/* Center Navigation Links: Landing page disabled when user is logged in */}
         <nav className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-wider text-slate-500">
+          {!user && (
+            <button
+              onClick={() => onNavigate('landing')}
+              className={`transition hover:text-slate-900 ${
+                currentPage === 'landing' ? 'text-indigo-600 font-extrabold' : ''
+              }`}
+            >
+              Overview
+            </button>
+          )}
+
           <button
-            onClick={() => onNavigate('landing')}
+            onClick={() => onNavigate('dashboard')}
             className={`transition hover:text-slate-900 ${
-              currentPage === 'landing' ? 'text-indigo-600 font-extrabold' : ''
+              currentPage === 'dashboard' ? 'text-indigo-600 font-extrabold' : ''
             }`}
           >
-            Overview
+            Dashboard
           </button>
           
           <button
@@ -45,15 +56,6 @@ export default function Navbar({ user, onNavigate, onLogout, currentPage }) {
             }`}
           >
             How It Works
-          </button>
-
-          <button
-            onClick={() => onNavigate('dashboard')}
-            className={`transition hover:text-slate-900 ${
-              currentPage === 'dashboard' ? 'text-indigo-600 font-extrabold' : ''
-            }`}
-          >
-            Explore Polls
           </button>
         </nav>
 

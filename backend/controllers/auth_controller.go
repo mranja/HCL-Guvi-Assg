@@ -12,6 +12,7 @@ import (
 	"pulsepoll/config"
 	"pulsepoll/middleware"
 	"pulsepoll/models"
+	"pulsepoll/utils"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -51,9 +52,9 @@ func Register(c *gin.Context) {
 	cleanEmail := strings.ToLower(strings.TrimSpace(input.Email))
 	cleanName := strings.TrimSpace(input.Name)
 
-	// Enforce Gmail validation requirement
+	// Validate valid Gmail address
 	if !strings.HasSuffix(cleanEmail, "@gmail.com") && !strings.HasSuffix(cleanEmail, "@googlemail.com") {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Please provide a valid Gmail account (@gmail.com) for verification."})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Please provide an active Gmail account (@gmail.com) for verification."})
 		return
 	}
 
@@ -65,10 +66,10 @@ func Register(c *gin.Context) {
 	err := usersColl.FindOne(ctx, bson.M{"email": cleanEmail}).Decode(&existing)
 	if err == nil {
 		if existing.IsVerified {
-			c.JSON(http.StatusConflict, gin.H{"error": "An account with this Gmail address already exists"})
+			c.JSON(http.StatusConflict, gin.H{"error": "An account with this Gmail address already exists. Please sign in."})
 			return
 		}
-		// If exists but not verified, generate new code and let them verify
+
 		otp := generateOTP()
 		codesColl := config.DB.Collection("verification_codes")
 		_, _ = codesColl.DeleteMany(ctx, bson.M{"email": cleanEmail})
@@ -80,11 +81,13 @@ func Register(c *gin.Context) {
 			CreatedAt: time.Now(),
 		})
 
+		// Send email quietly without exposing code to client JSON
+		_ = utils.SendVerificationEmail(cleanEmail, otp)
+
 		c.JSON(http.StatusOK, gin.H{
-			"message":           "Account pending verification. Your 6-digit verification code has been issued.",
-			"email":             cleanEmail,
-			"verification_code": otp, // Surfaced for frictionless interactive verification
-			"requires_verify":   true,
+			"message":         "Verification code sent to your email! Please check your inbox.",
+			"email":           cleanEmail,
+			"requires_verify": true,
 		})
 		return
 	}
@@ -106,11 +109,10 @@ func Register(c *gin.Context) {
 
 	_, err = usersColl.InsertOne(ctx, newUser)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save user in MongoDB Atlas"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save user in MongoDB"})
 		return
 	}
 
-	// Generate 6-digit OTP verification code
 	otp := generateOTP()
 	codesColl := config.DB.Collection("verification_codes")
 	_, _ = codesColl.InsertOne(ctx, models.VerificationCode{
@@ -121,11 +123,13 @@ func Register(c *gin.Context) {
 		CreatedAt: time.Now(),
 	})
 
+	// Send code directly to user's mailbox (NEVER returned in the JSON payload)
+	_ = utils.SendVerificationEmail(cleanEmail, otp)
+
 	c.JSON(http.StatusCreated, gin.H{
-		"message":           "Registration successful! Please verify your Gmail account.",
-		"email":             cleanEmail,
-		"verification_code": otp,
-		"requires_verify":   true,
+		"message":         "Registration initiated! A 6-digit verification code has been dispatched to your Gmail.",
+		"email":           cleanEmail,
+		"requires_verify": true,
 	})
 }
 
@@ -151,11 +155,10 @@ func VerifyCode(c *gin.Context) {
 	}).Decode(&record)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or expired verification code."})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or expired verification code. Please check your email and try again."})
 		return
 	}
 
-	// Mark user verified
 	usersColl := config.DB.Collection("users")
 	var user models.User
 	err = usersColl.FindOneAndUpdate(ctx,
@@ -164,11 +167,10 @@ func VerifyCode(c *gin.Context) {
 	).Decode(&user)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify account"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to complete verification"})
 		return
 	}
 
-	// Delete used code
 	_, _ = codesColl.DeleteMany(ctx, bson.M{"email": cleanEmail})
 
 	token, err := middleware.GenerateToken(user.ID, user.Email, user.Name)
@@ -225,11 +227,12 @@ func Login(c *gin.Context) {
 			CreatedAt: time.Now(),
 		})
 
+		_ = utils.SendVerificationEmail(cleanEmail, otp)
+
 		c.JSON(http.StatusForbidden, gin.H{
-			"error":             "Gmail account not yet verified. Please enter the verification code.",
-			"requires_verify":   true,
-			"email":             cleanEmail,
-			"verification_code": otp,
+			"error":           "Your Gmail is not verified yet. We just sent a fresh 6-digit code to your inbox.",
+			"requires_verify": true,
+			"email":           cleanEmail,
 		})
 		return
 	}
