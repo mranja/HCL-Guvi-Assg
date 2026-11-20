@@ -64,7 +64,6 @@ func main() {
 		auth := api.Group("/auth")
 		{
 			auth.POST("/register", controllers.Register)
-			auth.POST("/verify", controllers.VerifyCode)
 			auth.POST("/login", controllers.Login)
 			auth.GET("/me", middleware.AuthRequired(), controllers.GetMe)
 		}
