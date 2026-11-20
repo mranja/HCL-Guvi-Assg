@@ -89,7 +89,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0b0f19] text-white font-sans selection:bg-cyan-500 selection:text-black">
+    <div className="min-h-screen flex flex-col bg-[#faf9f6] text-[#1c1917] font-sans selection:bg-[#c84b31] selection:text-white">
       <Navbar
         user={user}
         currentPage={currentPage}
@@ -150,38 +150,38 @@ export default function App() {
         />
       )}
 
-      {/* Modern Cyber Footer */}
-      <footer className="border-t border-white/5 bg-[#080c14] py-12 text-xs text-slate-500 mt-20">
+      {/* Editorial Footer */}
+      <footer className="border-t border-stone-200 bg-white py-12 text-xs text-stone-500 mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
             <img src="/logo.svg" alt="PulsePoll" className="w-7 h-7 rounded-xl" />
-            <span className="font-mono font-bold tracking-tight text-white uppercase">
-              PULSE<span className="text-cyan-400">POLL</span>
+            <span className="font-editorial font-bold tracking-tight text-stone-900 text-sm">
+              Pulse<span className="text-[#c84b31]">Poll</span>
             </span>
-            <span className="text-slate-700">•</span>
-            <span className="text-slate-400">Next-gen live audience polling &amp; telemetry</span>
+            <span className="text-stone-300">•</span>
+            <span className="text-stone-500">Free live polling, Q&amp;A, and interactive audience sessions</span>
           </div>
 
-          <div className="flex items-center gap-6 font-semibold text-slate-400">
+          <div className="flex items-center gap-6 font-semibold text-stone-600">
             {!user && (
               <button
                 onClick={() => handleNavigate('landing')}
-                className="hover:text-white transition"
+                className="hover:text-stone-900 transition"
               >
                 Overview
               </button>
             )}
             <button
               onClick={() => handleNavigate('how-it-works')}
-              className="hover:text-white transition"
+              className="hover:text-stone-900 transition"
             >
-              How It Works
+              How it works
             </button>
             <button
               onClick={() => handleNavigate('dashboard')}
-              className="hover:text-white transition"
+              className="hover:text-stone-900 transition"
             >
-              Live Polls
+              Polls Dashboard
             </button>
           </div>
         </div>

@@ -1,17 +1,14 @@
 import React, { useState } from 'react';
 import { 
   PlusCircle, 
-  Share2, 
   CheckCircle2, 
   Activity, 
   ArrowRight, 
   ShieldCheck, 
   Sparkles,
-  Zap,
   Sliders,
   Eye,
   Lock,
-  Tv,
   QrCode
 } from 'lucide-react';
 
@@ -21,39 +18,39 @@ export default function HowItWorks({ onGetStarted, onCreatePoll }) {
   const steps = [
     {
       number: '01',
-      title: 'Create Your Poll',
+      title: 'Create Your Session',
       subtitle: 'Draft clear, focused questions with multiple options',
       description:
-        'Sign in effortlessly with your email account. Set up questions with 2 to 8 distinct options. You have full author controls to open, monitor, or close polls anytime.',
+        'Sign in, name your session, add as many options as you need. Multiple choice, word questions, and audience check-ins with no limits.',
       icon: PlusCircle,
-      accent: 'text-cyan-400 bg-cyan-950/40 border-cyan-500/20',
+      accent: 'text-[#d97706] bg-[#fef3c7]',
     },
     {
       number: '02',
-      title: 'Project or Share PIN / QR',
-      subtitle: 'Instant audience entry with zero friction',
+      title: 'Share a Code or QR',
+      subtitle: 'Participants get a 6-character code or scan a QR',
       description:
-        'Project the live poll on a large screen with a prominent QR code and room PIN. Voters simply scan from their phones or enter the code—no software downloads or accounts needed.',
+        'No app to download. No account needed. They are in instantly, from any phone, tablet, or laptop in seconds.',
       icon: QrCode,
-      accent: 'text-violet-400 bg-violet-950/40 border-violet-500/20',
+      accent: 'text-[#4f46e5] bg-[#eef2ff]',
     },
     {
       number: '03',
-      title: 'Audience Votes Live',
+      title: 'See Results Live',
       subtitle: 'Fast, thumb-friendly, and spam-protected',
       description:
-        'Participants select their answer from any device. Cryptographic client fingerprinting and Redis atomic set logic prevent ballot stuffing.',
+        'Responses appear in real time as people answer. Switch views, watch the room react, and share results in one link.',
       icon: CheckCircle2,
-      accent: 'text-emerald-400 bg-emerald-950/40 border-emerald-500/20',
+      accent: 'text-[#10b981] bg-[#ecfdf5]',
     },
     {
       number: '04',
-      title: 'Live Real-Time Telemetry',
-      subtitle: 'Instant animation with zero page refresh',
+      title: 'Presenter Projection',
+      subtitle: 'Designed for big screens and projectors',
       description:
-        'Audience consensus updates dynamically on screen as votes are submitted. Live percentage tracks and interactive charts animate fluidly powered by Redis Pub/Sub and WebSockets.',
+        'Toggle stage projection view for classrooms, auditoriums, and conferences with live updating response bars.',
       icon: Activity,
-      accent: 'text-pink-400 bg-pink-950/40 border-pink-500/20',
+      accent: 'text-[#ef4444] bg-[#fef2f2]',
     },
   ];
 
@@ -62,77 +59,76 @@ export default function HowItWorks({ onGetStarted, onCreatePoll }) {
       
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto mb-10">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-400 text-xs font-bold uppercase tracking-wider mb-4">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#fcedea] text-[#c84b31] border border-[#f5d0c8] text-xs font-semibold mb-4">
           <Sparkles className="w-3.5 h-3.5" />
-          <span>Interactive Architecture &amp; Controls</span>
+          <span>Interactive Architecture</span>
         </div>
-        <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight leading-tight mb-4">
+        <h1 className="text-4xl sm:text-5xl font-normal text-[#1c1917] tracking-tight leading-tight mb-4 font-editorial">
           How PulsePoll Works
         </h1>
-        <p className="text-slate-400 text-base sm:text-lg leading-relaxed">
-          Explore the live polling workflow and customize presentation settings for your sessions.
+        <p className="text-stone-600 text-base sm:text-lg leading-relaxed">
+          From question creation to audience consensus in under 60 seconds.
         </p>
 
-        {/* Setting Switcher Tabs */}
+        {/* Tab Controls */}
         <div className="flex items-center justify-center gap-3 mt-8">
           <button
             onClick={() => setActiveTab('workflow')}
             className={`px-5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider transition ${
               activeTab === 'workflow'
-                ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md'
-                : 'bg-slate-900 text-slate-400 border border-white/10 hover:text-white'
+                ? 'bg-[#1b4332] text-white shadow-sm'
+                : 'bg-white text-stone-600 border border-stone-200 hover:text-stone-900'
             }`}
           >
-            4-Step Polling Workflow
+            Session Workflow
           </button>
           <button
             onClick={() => setActiveTab('settings')}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider transition ${
               activeTab === 'settings'
-                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md'
-                : 'bg-slate-900 text-slate-400 border border-white/10 hover:text-white'
+                ? 'bg-[#c84b31] text-white shadow-sm'
+                : 'bg-white text-stone-600 border border-stone-200 hover:text-stone-900'
             }`}
           >
             <Sliders className="w-3.5 h-3.5" />
-            <span>Poll Presentation Settings</span>
+            <span>Presentation Controls</span>
           </button>
         </div>
       </div>
 
       {activeTab === 'workflow' ? (
-        /* Steps List */
         <div className="space-y-6 mb-16">
           {steps.map((step, idx) => {
             const Icon = step.icon;
             return (
               <div
                 key={idx}
-                className="bg-[#111827]/90 border border-white/5 rounded-3xl p-8 sm:p-10 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:border-cyan-500/20 transition"
+                className="bg-white border border-stone-200 rounded-3xl p-8 sm:p-10 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:border-[#1b4332]/40 transition"
               >
                 <div className="flex items-start gap-6">
-                  <div className="font-mono text-3xl sm:text-4xl font-black text-slate-600">
+                  <div className="font-editorial text-3xl sm:text-4xl font-bold text-stone-300">
                     {step.number}
                   </div>
                   <div>
                     <div className="flex items-center gap-3 mb-2">
-                      <div className={`p-2 rounded-xl border ${step.accent}`}>
+                      <div className={`p-2 rounded-xl ${step.accent}`}>
                         <Icon className="w-5 h-5" />
                       </div>
-                      <h2 className="text-xl font-bold text-white">
+                      <h2 className="text-xl font-bold text-stone-900 font-editorial">
                         {step.title}
                       </h2>
                     </div>
-                    <p className="text-xs font-bold uppercase tracking-wider text-cyan-400 mb-2">
+                    <p className="text-xs font-bold uppercase tracking-wider text-[#c84b31] mb-2 font-mono">
                       {step.subtitle}
                     </p>
-                    <p className="text-xs sm:text-sm text-slate-400 max-w-2xl leading-relaxed">
+                    <p className="text-xs sm:text-sm text-stone-500 max-w-2xl leading-relaxed">
                       {step.description}
                     </p>
                   </div>
                 </div>
 
                 <div className="self-end md:self-center shrink-0">
-                  <div className="w-8 h-8 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center text-slate-400">
+                  <div className="w-8 h-8 rounded-full bg-stone-50 border border-stone-200 flex items-center justify-center text-stone-400">
                     <ArrowRight className="w-4 h-4" />
                   </div>
                 </div>
@@ -141,53 +137,52 @@ export default function HowItWorks({ onGetStarted, onCreatePoll }) {
           })}
         </div>
       ) : (
-        /* Presentation Settings */
-        <div className="bg-[#111827]/90 border border-white/5 rounded-[2.5rem] p-8 sm:p-12 mb-16 shadow-2xl cyber-grid">
+        <div className="bg-white border border-stone-200 rounded-[2.5rem] p-8 sm:p-12 mb-16 shadow-sm">
           <div className="max-w-2xl mb-8">
-            <h2 className="text-2xl font-black text-white tracking-tight mb-2">
+            <h2 className="text-2xl font-bold text-stone-900 tracking-tight mb-2 font-editorial">
               Audience &amp; Presentation Controls
             </h2>
-            <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-              Tailor how votes are displayed and how interactions are handled during live presentations or team reviews.
+            <p className="text-xs sm:text-sm text-stone-500 leading-relaxed">
+              Tailor how votes are displayed and how interactions are handled during live sessions.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-6 rounded-3xl bg-slate-900 border border-white/5">
-              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center mb-4">
+            <div className="p-6 rounded-3xl bg-[#faf9f6] border border-stone-200">
+              <div className="w-10 h-10 rounded-xl bg-[#eef2ff] text-[#4f46e5] flex items-center justify-center mb-4">
                 <Eye className="w-5 h-5" />
               </div>
-              <h3 className="text-sm font-bold text-white mb-1">Visual Representation</h3>
-              <p className="text-xs text-slate-400 mb-4">
+              <h3 className="text-sm font-bold text-stone-900 mb-1">Visual Representation</h3>
+              <p className="text-xs text-stone-500 mb-4">
                 Switch between real-time progress bars or responsive pie and vertical breakdown charts.
               </p>
-              <span className="inline-block px-3 py-1 bg-cyan-950/60 border border-cyan-500/30 text-cyan-400 text-[11px] font-bold rounded-lg font-mono">
-                Dynamic Toggle Active
+              <span className="inline-block px-3 py-1 bg-white border border-stone-200 text-stone-700 text-[11px] font-bold rounded-lg font-mono">
+                Dynamic Toggle
               </span>
             </div>
 
-            <div className="p-6 rounded-3xl bg-slate-900 border border-white/5">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-4">
+            <div className="p-6 rounded-3xl bg-[#faf9f6] border border-stone-200">
+              <div className="w-10 h-10 rounded-xl bg-[#ecfdf5] text-[#10b981] flex items-center justify-center mb-4">
                 <ShieldCheck className="w-5 h-5" />
               </div>
-              <h3 className="text-sm font-bold text-white mb-1">Anti-Duplication Shield</h3>
-              <p className="text-xs text-slate-400 mb-4">
-                Ensures single-ballot accuracy per participant via cryptographic client hash verification in Redis Sets.
+              <h3 className="text-sm font-bold text-stone-900 mb-1">Anti-Duplication Shield</h3>
+              <p className="text-xs text-stone-500 mb-4">
+                Ensures single-ballot accuracy per participant via cryptographic client hash verification.
               </p>
-              <span className="inline-block px-3 py-1 bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold rounded-lg font-mono">
-                Enabled by Default
+              <span className="inline-block px-3 py-1 bg-white border border-stone-200 text-emerald-700 text-[11px] font-bold rounded-lg font-mono">
+                Always Active
               </span>
             </div>
 
-            <div className="p-6 rounded-3xl bg-slate-900 border border-white/5">
-              <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center mb-4">
+            <div className="p-6 rounded-3xl bg-[#faf9f6] border border-stone-200">
+              <div className="w-10 h-10 rounded-xl bg-[#fcedea] text-[#c84b31] flex items-center justify-center mb-4">
                 <Lock className="w-5 h-5" />
               </div>
-              <h3 className="text-sm font-bold text-white mb-1">Author Locking Controls</h3>
-              <p className="text-xs text-slate-400 mb-4">
-                Instantly close active polls to lock final responses, or reopen them anytime from your poll dashboard.
+              <h3 className="text-sm font-bold text-stone-900 mb-1">Author Locking Controls</h3>
+              <p className="text-xs text-stone-500 mb-4">
+                Instantly close active polls to lock final responses, or reopen them anytime.
               </p>
-              <span className="inline-block px-3 py-1 bg-violet-950/60 border border-violet-500/30 text-violet-400 text-[11px] font-bold rounded-lg font-mono">
+              <span className="inline-block px-3 py-1 bg-white border border-stone-200 text-[#c84b31] text-[11px] font-bold rounded-lg font-mono">
                 One-Click Status Toggle
               </span>
             </div>
@@ -196,27 +191,27 @@ export default function HowItWorks({ onGetStarted, onCreatePoll }) {
       )}
 
       {/* CTA Box */}
-      <div className="bg-gradient-to-r from-[#111827] via-slate-900 to-[#111827] border border-white/10 rounded-3xl p-8 sm:p-10 mb-12 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl">
+      <div className="bg-[#fbf6ef] border border-[#f3ebe1] rounded-3xl p-8 sm:p-10 mb-12 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-sm">
         <div>
-          <h3 className="text-xl font-black text-white tracking-tight mb-1">
-            Ready to experience live polling?
+          <h3 className="text-2xl font-normal text-stone-900 tracking-tight mb-1 font-editorial">
+            Ready to host your session?
           </h3>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-stone-600">
             Launch a question in seconds and share with your audience.
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={onCreatePoll}
-            className="px-6 py-3.5 bg-gradient-to-r from-cyan-500 to-violet-600 hover:opacity-90 text-white text-xs font-bold uppercase tracking-wider rounded-2xl shadow-lg shadow-cyan-500/20 transition"
+            className="px-6 py-3.5 bg-[#c84b31] hover:bg-[#b03e26] text-white text-xs font-bold uppercase tracking-wider rounded-2xl shadow-sm transition"
           >
-            Create a Poll
+            Host a Poll
           </button>
           <button
             onClick={onGetStarted}
-            className="px-6 py-3.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold uppercase tracking-wider rounded-2xl border border-white/10 transition"
+            className="px-6 py-3.5 bg-[#1b4332] hover:bg-[#2d6a4f] text-white text-xs font-bold uppercase tracking-wider rounded-2xl transition"
           >
-            View Dashboard
+            All Polls
           </button>
         </div>
       </div>
