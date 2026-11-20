@@ -7,10 +7,19 @@ import (
 )
 
 type User struct {
+	ID         primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Email      string             `bson:"email" json:"email"`
+	Password   string             `bson:"password" json:"-"`
+	Name       string             `bson:"name" json:"name"`
+	IsVerified bool               `bson:"is_verified" json:"is_verified"`
+	CreatedAt  time.Time          `bson:"created_at" json:"created_at"`
+}
+
+type VerificationCode struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	Email     string             `bson:"email" json:"email"`
-	Password  string             `bson:"password" json:"-"`
-	Name      string             `bson:"name" json:"name"`
+	Code      string             `bson:"code" json:"code"`
+	ExpiresAt time.Time          `bson:"expires_at" json:"expires_at"`
 	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
 }
 
@@ -33,11 +42,10 @@ type Poll struct {
 	UpdatedAt   time.Time          `bson:"updated_at" json:"updated_at"`
 }
 
-// VoteLog records an individual vote to ensure auditability and avoid client duplicates
 type VoteLog struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	PollID    primitive.ObjectID `bson:"poll_id" json:"poll_id"`
 	OptionID  string             `bson:"option_id" json:"option_id"`
-	VoterKey  string             `bson:"voter_key" json:"voter_key"` // hashed client fingerprint or IP
+	VoterKey  string             `bson:"voter_key" json:"voter_key"`
 	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
 }

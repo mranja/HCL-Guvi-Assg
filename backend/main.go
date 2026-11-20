@@ -9,7 +9,6 @@ import (
 	"pulsepoll/controllers"
 	"pulsepoll/middleware"
 	"pulsepoll/realtime"
-	"pulsepoll/store"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -18,19 +17,14 @@ import (
 func main() {
 	config.LoadConfig()
 
-	// Initialize local persistent fallback store
-	if err := store.InitLocalStore("./data"); err != nil {
-		log.Printf("[WARNING] Local store init: %v", err)
-	}
-
-	// Try MongoDB
+	// Connect to MongoDB Atlas
 	if err := config.InitMongo(); err != nil {
-		log.Printf("[INFO] MongoDB offline, operating with local persistent engine: %v", err)
+		log.Printf("[WARNING] MongoDB connection failed: %v", err)
 	}
 
-	// Try Redis
+	// Connect to Redis
 	if err := config.InitRedis(); err != nil {
-		log.Printf("[WARNING] Redis warning: %v", err)
+		log.Printf("[WARNING] Redis connection failed: %v", err)
 	}
 
 	realtime.InitHub()
@@ -49,11 +43,11 @@ func main() {
 	router.GET("/health", func(c *gin.Context) {
 		mongoStatus := "connected"
 		if config.DB == nil {
-			mongoStatus = "fallback_local_store"
+			mongoStatus = "disconnected"
 		}
 		redisStatus := "connected"
 		if config.RDB == nil {
-			redisStatus = "in_memory"
+			redisStatus = "disconnected"
 		}
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "ok",
@@ -70,6 +64,7 @@ func main() {
 		auth := api.Group("/auth")
 		{
 			auth.POST("/register", controllers.Register)
+			auth.POST("/verify", controllers.VerifyCode)
 			auth.POST("/login", controllers.Login)
 			auth.GET("/me", middleware.AuthRequired(), controllers.GetMe)
 		}
@@ -91,7 +86,7 @@ func main() {
 	}
 
 	port := config.AppConfig.Port
-	log.Printf("PulsePoll Backend listening on port :%s", port)
+	log.Printf("PulsePoll Server active on port :%s", port)
 	if err := router.Run(":" + port); err != nil {
 		log.Fatalf("Server run error: %v", err)
 	}
